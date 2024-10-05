@@ -1,21 +1,21 @@
 import Head from 'next/head'
 import GalaxyForm from '../components/GalaxyForm'
+import styles from '../styles/GalaxyControl.module.css';
 
 export default function Home() {
-  return (
-    <div className="min-h-screen bg-gray-100 py-6 flex flex-col justify-center sm:py-12">
-      <Head>
-        <title>Galaxy Control</title>
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-
-      <div className="relative py-3 sm:max-w-xl sm:mx-auto">
-        <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-light-blue-500 shadow-lg transform -skew-y-6 sm:skew-y-0 sm:-rotate-6 sm:rounded-3xl"></div>
-        <div className="relative px-4 py-10 bg-white shadow-lg sm:rounded-3xl sm:p-20">
-          <h1 className="text-2xl font-semibold mb-5">Galaxy Control Panel</h1>
+    return (
+      <div className={styles.container}>
+        <div className={styles.stars}></div>
+        <div className={styles.nebula}></div>
+        <Head>
+          <title>Galaxy Control</title>
+          <link rel="icon" href="/favicon.ico" />
+        </Head>
+  
+        <h1 className={styles.title}>Galaxy Control Panel</h1>
+        <div className={styles.formContainer}>
           <GalaxyForm />
         </div>
       </div>
-    </div>
-  )
-}
+    )
+  }
