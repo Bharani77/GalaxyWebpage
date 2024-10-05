@@ -1,177 +1,144 @@
 import React, { useState } from 'react';
-import { startGalaxy, updateGalaxy, stopGalaxy } from '../utils/api';
+import { Play, Square, RefreshCw } from 'lucide-react';
 import styles from '../styles/GalaxyControl.module.css';
 
-const GalaxyForm = () => {
-  const [formData, setFormData] = useState({
-    rc: '',
-    attackTime: '',
-    defenceTime: '',
-    planetName: '',
-    intervalTime: '',
+type FormData = {
+  RC: string;
+  rival: string;
+  planetName: string;
+  DefenceTime: string;
+  AttackTime: string;
+  intervalTime: string;
+};
+
+type ButtonState = {
+  loading: boolean;
+  success: boolean;
+};
+
+type ButtonStates = {
+  start: ButtonState;
+  stop: ButtonState;
+  update: ButtonState;
+};
+
+type ActionType = keyof ButtonStates;
+
+const GalaxyForm: React.FC = () => {
+  const [formData, setFormData] = useState<FormData>({
+    RC: '',
     rival: '',
+    planetName: '',
+    DefenceTime: '',
+    AttackTime: '',
+    intervalTime: ''
+  });
+  
+  
+
+  const [buttonStates, setButtonStates] = useState<ButtonStates>({
+    start: { loading: false, success: false },
+    stop: { loading: false, success: false },
+    update: { loading: false, success: false }
   });
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [isLaunched, setIsLaunched] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prevState => ({
+      ...prevState,
+      [name]: value
+    }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    try {
-      await startGalaxy(formData);
-      setIsLaunched(true);
-      alert('Galaxy started successfully');
-    } catch (error) {
-      alert('Error starting galaxy');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const handleAction = async (action: ActionType) => {
+    setButtonStates(prev => ({
+      ...prev,
+      [action]: { ...prev[action], loading: true }
+    }));
+    setError('');
 
-  const handleUpdate = async () => {
-    setIsLoading(true);
     try {
-      await updateGalaxy(formData);
-      alert('Galaxy updated successfully');
-    } catch (error) {
-      alert('Error updating galaxy');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      const response = await fetch(`https://5000-bharani77-galaxycodewor-ptj4n5r2xpg.ws-us116.gitpod.io/${action}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      });
 
-  const handleStop = async () => {
-    setIsLoading(true);
-    try {
-      await stopGalaxy();
-      setIsLaunched(false);
-      alert('Galaxy stopped successfully');
+      if (response.ok) {
+        setButtonStates(prev => ({
+          ...prev,
+          [action]: { loading: false, success: true }
+        }));
+        
+        setTimeout(() => {
+          setButtonStates(prev => ({
+            ...prev,
+            [action]: { loading: false, success: false }
+          }));
+        }, 2000);
+      } else {
+        throw new Error(`Failed to ${action} galaxy`);
+      }
     } catch (error) {
-      alert('Error stopping galaxy');
-    } finally {
-      setIsLoading(false);
+      setError(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setButtonStates(prev => ({
+        ...prev,
+        [action]: { loading: false, success: false }
+      }));
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className={styles.form}>
-      <div className={styles.inputGroup}>
-        <label htmlFor="rc" className={styles.label}>RC</label>
-        <input
-          type="text"
-          name="rc"
-          id="rc"
-          value={formData.rc}
-          onChange={handleChange}
-          className={styles.input}
-        />
+    <div className={styles.container}>
+      <div className={styles.stars}></div>
+      <div className={styles.nebula}></div>
+      <h1 className={styles.title}>Galaxy Control Panel</h1>
+      
+      <div className={styles.formContainer}>
+        {error && <div className="text-red-500 mb-4">{error}</div>}
+        
+        <form className={styles.form}>
+          {(Object.keys(formData) as Array<keyof FormData>).map((key) => (
+            <div key={key} className={styles.inputGroup}>
+              <label className={styles.label}>
+                {key.replace(/([A-Z])/g, ' $1').trim()}
+              </label>
+              <input
+                type={['DefenceTime', 'AttackTime', 'intervalTime'].includes(key) ? 'number' : 'text'}
+                name={key}
+                value={formData[key]}
+                onChange={handleInputChange}
+                className={styles.input}
+              />
+            </div>
+          ))}
+          
+          <div className={styles.buttonGroup}>
+            {(['start', 'stop', 'update'] as const).map((action) => (
+              <button
+                key={action}
+                type="button"
+                onClick={() => handleAction(action)}
+                className={`${styles.button} ${buttonStates[action].loading ? styles.loadingButton : ''} ${buttonStates[action].success ? styles.buttonActive : ''}`}
+                disabled={buttonStates[action].loading}
+              >
+                {action === 'start' && <Play size={16} />}
+                {action === 'stop' && <Square size={16} />}
+                {action === 'update' && <RefreshCw size={16} />}
+                <span className={styles.loadingText}>
+                  {buttonStates[action].loading ? `${action}ing` : action}
+                </span>
+                {buttonStates[action].loading && <span className={styles.dots}></span>}
+              </button>
+            ))}
+          </div>
+        </form>
       </div>
-      <div className={styles.inputGroup}>
-        <label htmlFor="attackTime" className={styles.label}>Attack Time</label>
-        <input
-          type="number"
-          name="attackTime"
-          id="attackTime"
-          value={formData.attackTime}
-          onChange={handleChange}
-          className={styles.input}
-        />
-      </div>
-      <div className={styles.inputGroup}>
-        <label htmlFor="defenceTime" className={styles.label}>Defence Time</label>
-        <input
-          type="number"
-          name="defenceTime"
-          id="defenceTime"
-          value={formData.defenceTime}
-          onChange={handleChange}
-          className={styles.input}
-        />
-      </div>
-      <div className={styles.inputGroup}>
-        <label htmlFor="planetName" className={styles.label}>Planet Name</label>
-        <input
-          type="text"
-          name="planetName"
-          id="planetName"
-          value={formData.planetName}
-          onChange={handleChange}
-          className={styles.input}
-        />
-      </div>
-      <div className={styles.inputGroup}>
-        <label htmlFor="intervalTime" className={styles.label}>Interval Time</label>
-        <input
-          type="number"
-          name="intervalTime"
-          id="intervalTime"
-          value={formData.intervalTime}
-          onChange={handleChange}
-          className={styles.input}
-        />
-      </div>
-      <div className={styles.inputGroup}>
-        <label htmlFor="rival" className={styles.label}>Rival</label>
-        <input
-          type="text"
-          name="rival"
-          id="rival"
-          value={formData.rival}
-          onChange={handleChange}
-          className={styles.input}
-        />
-      </div>
-      <div className={styles.buttonGroup}>
-        <button 
-          type="submit" 
-          className={`${styles.button} ${isLoading ? styles.loadingButton : ''} ${isLaunched ? styles.launchedButton : ''}`}
-          disabled={isLoading || isLaunched}
-        >
-          {isLoading ? (
-            <span className={styles.loadingText}>
-              Starting<span className={styles.dots}></span>
-            </span>
-          ) : isLaunched ? (
-            'Galaxy Launched'
-          ) : (
-            'Start Galaxy'
-          )}
-        </button>
-        <button 
-          type="button" 
-          onClick={handleUpdate} 
-          className={`${styles.button} ${isLoading ? styles.loadingButton : ''}`}
-          disabled={isLoading || !isLaunched}
-        >
-          {isLoading ? (
-            <span className={styles.loadingText}>
-              Updating<span className={styles.dots}></span>
-            </span>
-          ) : (
-            'Update Galaxy'
-          )}
-        </button>
-        <button 
-          type="button" 
-          onClick={handleStop} 
-          className={`${styles.button} ${isLoading ? styles.loadingButton : ''}`}
-          disabled={isLoading || !isLaunched}
-        >
-          {isLoading ? (
-            <span className={styles.loadingText}>
-              Stopping<span className={styles.dots}></span>
-            </span>
-          ) : (
-            'Stop Galaxy'
-          )}
-        </button>
-      </div>
-    </form>
+    </div>
   );
 };
 

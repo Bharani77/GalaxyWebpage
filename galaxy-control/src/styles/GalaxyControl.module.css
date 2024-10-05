@@ -12,6 +12,16 @@
     from { background-position: 0 0; }
     to { background-position: 10000px 5000px; }
   }
+
+  .buttonActive {
+    background-color: rgba(0, 255, 0, 0.4) !important;
+    border-color: #00ff00 !important;
+    box-shadow: 0 0 15px rgba(0, 255, 0, 0.7) !important;
+  }
+  
+  .button {
+    transition: all 0.3s ease;
+  }
   
   @keyframes move-nebula {
     from { background-position: 0 0; }

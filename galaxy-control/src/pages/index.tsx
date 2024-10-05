@@ -12,7 +12,6 @@ export default function Home() {
           <link rel="icon" href="/favicon.ico" />
         </Head>
   
-        <h1 className={styles.title}>Galaxy Control Panel</h1>
         <div className={styles.formContainer}>
           <GalaxyForm />
         </div>
